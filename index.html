@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VilloAI</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f4f6fb;
+  --surface:   #ffffff;
+  --surface2:  #f0f2f8;
+  --border:    #e2e6f0;
+  --border2:   #cdd3e3;
+  --accent:    #2563eb;
+  --accent-h:  #1d4ed8;
+  --accent-lt: #eff4ff;
+  --accent2:   #7c3aed;
+  --success:   #059669;
+  --warn:      #d97706;
+  --danger:    #dc2626;
+  --text:      #111827;
+  --text2:     #374151;
+  --muted:     #9ca3af;
+  --muted2:    #6b7280;
+  --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --r:         12px;
+  --font:      'Outfit', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); font-size:15px; }
+
+/* ── SCREENS ── */
+.screen { display:none; height:100vh; }
+.screen.active { display:flex; }
+
+/* ════════════════════════════════
+   AUTH SCREEN
+════════════════════════════════ */
+#authScreen {
+  align-items:center; justify-content:center;
+  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+}
+.auth-card {
+  background:var(--surface);
+  border-radius:20px;
+  box-shadow: var(--shadow-lg);
+  padding: 44px 40px;
+  width: 100%; max-width: 420px;
+  animation: cardIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(24px) scale(.97)} to{opacity:1;transform:none} }
+
+.auth-logo {
+  display:flex; align-items:center; gap:10px;
+  margin-bottom:32px;
+}
+.auth-logo-mark {
+  width:42px; height:42px; border-radius:11px;
+  background:var(--accent);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:800; font-size:1.15rem; letter-spacing:-.02em;
+}
+.auth-logo-text { font-size:1.5rem; font-weight:800; color:var(--text); letter-spacing:-.03em; }
+.auth-logo-sub   { font-size:.7rem; color:var(--muted); font-family:var(--mono); margin-left:2px; }
+
+.auth-tabs {
+  display:flex; gap:4px;
+  background:var(--surface2);
+  border-radius:10px; padding:4px;
+  margin-bottom:28px;
+}
+.auth-tab {
+  flex:1; padding:9px; border:none; background:transparent;
+  border-radius:8px; font-family:var(--font); font-size:.88rem;
+  font-weight:500; color:var(--muted2); cursor:pointer; transition:.2s;
+}
+.auth-tab.active { background:var(--surface); color:var(--accent); font-weight:600; box-shadow:var(--shadow); }
+
+.field { margin-bottom:18px; }
+.field label { display:block; font-size:.82rem; font-weight:600; color:var(--text2); margin-bottom:6px; }
+.field input {
+  width:100%; padding:11px 14px;
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  font-family:var(--font); font-size:.93rem; color:var(--text);
+  background:var(--surface); outline:none; transition:.2s;
+}
+.field input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+.field input::placeholder { color:var(--muted); }
+
+/* PIN input row */
+.pin-row { display:flex; gap:8px; }
+.pin-row input {
+  width:44px; padding:11px 0; text-align:center;
+  font-size:1.1rem; font-family:var(--mono); letter-spacing:.05em;
+}
+
+.auth-btn {
+  width:100%; padding:13px;
+  background:var(--accent); color:#fff;
+  border:none; border-radius:10px;
+  font-family:var(--font); font-size:.95rem; font-weight:600;
+  cursor:pointer; transition:.2s; margin-top:4px;
+}
+.auth-btn:hover { background:var(--accent-h); }
+.auth-btn:active { transform:scale(.98); }
+.auth-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+.auth-error {
+  background:#fef2f2; border:1px solid #fecaca;
+  border-radius:8px; padding:10px 14px;
+  font-size:.83rem; color:var(--danger); margin-top:14px;
+  display:none;
+}
+
+/* ════════════════════════════════
+   MAIN APP
+════════════════════════════════ */
+#appScreen { flex-direction:row; overflow:hidden; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:280px; flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  height:100vh;
+}
+.sidebar-head {
+  padding:16px 16px 12px;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.sidebar-brand {
+  display:flex; align-items:center; gap:9px; margin-bottom:14px;
+}
+.brand-mark {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:.85rem;
+}
+.brand-name { font-size:1.1rem; font-weight:800; letter-spacing:-.03em; color:var(--text); }
+
+/* token gauge */
+.tok-gauge { margin-bottom:4px; }
+.tok-row {
+  display:flex; justify-content:space-between;
+  font-size:.72rem; font-family:var(--mono); margin-bottom:5px;
+  color:var(--muted2);
+}
+.tok-row b { color:var(--accent); }
+.gauge-track {
+  height:5px; background:var(--surface2);
+  border-radius:3px; overflow:hidden; border:1px solid var(--border);
+}
+.gauge-bar {
+  height:100%; border-radius:3px;
+  background:linear-gradient(90deg, var(--accent), var(--accent2));
+  transition:width .5s ease, background .4s;
+  width:0%;
+}
+.gauge-bar.warn   { background:linear-gradient(90deg,var(--warn),#b45309); }
+.gauge-bar.danger { background:linear-gradient(90deg,var(--danger),#991b1b); }
+.reset-row {
+  font-size:.67rem; font-family:var(--mono);
+  color:var(--muted); margin-top:4px; text-align:right;
+}
+
+/* user strip */
+.user-strip {
+  display:flex; align-items:center; gap:9px;
+  padding:10px 14px;
+  margin-top:8px;
+  background:var(--surface2);
+  border-radius:10px;
+  cursor:default;
+}
+.user-avatar {
+  width:30px; height:30px; border-radius:8px;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:.8rem; flex-shrink:0;
+}
+.user-info { flex:1; min-width:0; }
+.user-name { font-size:.85rem; font-weight:600; color:var(--text); truncate; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-role { font-size:.67rem; color:var(--muted); font-family:var(--mono); }
+.logout-btn {
+  background:none; border:none; cursor:pointer;
+  color:var(--muted); font-size:1rem; padding:2px 4px;
+  border-radius:5px; transition:.15s;
+}
+.logout-btn:hover { color:var(--danger); background:#fef2f2; }
+
+/* chat list */
+.chat-list-head {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px 8px;
+}
+.chat-list-head span { font-size:.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.new-chat-btn {
+  width:26px; height:26px; border-radius:7px;
+  background:var(--accent-lt); border:none;
+  color:var(--accent); cursor:pointer; font-size:1rem;
+  display:flex; align-items:center; justify-content:center;
+  transition:.15s;
+}
+.new-chat-btn:hover { background:var(--accent); color:#fff; }
+
+.chat-list { flex:1; overflow-y:auto; padding:4px 8px 8px; }
+.chat-list::-webkit-scrollbar { width:3px; }
+.chat-list::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+.chat-item {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 10px; border-radius:9px;
+  cursor:pointer; transition:.15s; margin-bottom:2px;
+  border:1.5px solid transparent;
+}
+.chat-item:hover { background:var(--surface2); }
+.chat-item.active { background:var(--accent-lt); border-color:rgba(37,99,235,.15); }
+.chat-item-icon {
+  width:28px; height:28px; border-radius:7px; flex-shrink:0;
+  background:var(--surface2); display:flex; align-items:center; justify-content:center;
+  font-size:.85rem;
+}
+.chat-item.active .chat-item-icon { background:rgba(37,99,235,.12); }
+.chat-item-info { flex:1; min-width:0; }
+.chat-item-title { font-size:.84rem; font-weight:500; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-item.active .chat-item-title { color:var(--accent); font-weight:600; }
+.chat-item-sub { font-size:.7rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.chat-del {
+  background:none; border:none; color:var(--muted);
+  cursor:pointer; font-size:.8rem; padding:3px 5px; border-radius:4px;
+  opacity:0; transition:.15s; flex-shrink:0;
+}
+.chat-item:hover .chat-del { opacity:1; }
+.chat-del:hover { color:var(--danger); background:#fef2f2; }
+
+/* ── MAIN AREA ── */
+.main {
+  flex:1; display:flex; flex-direction:column; min-width:0;
+  background:var(--bg); height:100vh;
+}
+
+/* chat header */
+.chat-head {
+  background:var(--surface); border-bottom:1px solid var(--border);
+  padding:14px 24px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.chat-head-title { font-size:1rem; font-weight:700; color:var(--text); }
+.chat-head-sub   { font-size:.72rem; color:var(--muted); font-family:var(--mono); margin-top:1px; }
+.head-badge {
+  font-size:.68rem; font-family:var(--mono);
+  background:var(--accent-lt); color:var(--accent);
+  border:1px solid rgba(37,99,235,.2); padding:4px 10px; border-radius:100px;
+}
+
+/* messages */
+#msgArea {
+  flex:1; overflow-y:auto; padding:20px 0 8px;
+  scroll-behavior:smooth;
+}
+#msgArea::-webkit-scrollbar { width:4px; }
+#msgArea::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+.msg-wrap {
+  max-width:760px; margin:0 auto 4px; padding:0 24px;
+  animation:msgIn .22s ease forwards; opacity:0; transform:translateY(5px);
+}
+@keyframes msgIn { to{opacity:1;transform:none} }
+
+.msg { display:flex; gap:11px; align-items:flex-start; }
+.msg.user { flex-direction:row-reverse; }
+
+.av {
+  width:32px; height:32px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.72rem; font-weight:700; margin-top:2px;
+}
+.av.ai-av  { background:var(--accent); color:#fff; }
+.av.usr-av { background:var(--surface2); border:1.5px solid var(--border2); color:var(--muted2); font-size:.65rem; }
+
+.bubble {
+  max-width:calc(100% - 55px);
+  padding:11px 15px; border-radius:var(--r);
+  font-size:.875rem; line-height:1.75;
+}
+.ai   .bubble { background:var(--surface); border:1px solid var(--border); border-bottom-left-radius:3px; box-shadow:var(--shadow); }
+.user .bubble { background:var(--accent); color:#fff; border-bottom-right-radius:3px; }
+
+.bubble pre {
+  background:var(--surface2); border:1px solid var(--border2);
+  border-left:3px solid var(--accent); border-radius:8px;
+  padding:12px 14px; margin:10px 0; overflow-x:auto;
+  font-family:var(--mono); font-size:.78rem; line-height:1.6;
+  color:var(--text2);
+}
+.bubble code { font-family:var(--mono); font-size:.8em; background:var(--accent-lt); color:var(--accent); padding:1px 5px; border-radius:4px; }
+.bubble pre code { background:none; padding:0; color:var(--text2); }
+.user .bubble pre { background:rgba(255,255,255,.15); border-color:rgba(255,255,255,.25); color:#fff; }
+.user .bubble code { background:rgba(255,255,255,.2); color:#fff; }
+.bubble strong { color:var(--accent); }
+.user .bubble strong { color:#fff; font-weight:700; }
+.bubble em { color:var(--accent2); font-style:normal; font-weight:500; }
+.user .bubble em { color:rgba(255,255,255,.85); }
+.bubble h1,.bubble h2,.bubble h3 { color:var(--accent); font-weight:700; margin:10px 0 5px; }
+.bubble h1{font-size:1.05rem} .bubble h2{font-size:.97rem} .bubble h3{font-size:.9rem}
+.bubble ul,.bubble ol { padding-left:18px; margin:6px 0; }
+.bubble li { margin:3px 0; }
+.bubble hr { border:none; border-top:1px solid var(--border); margin:10px 0; }
+.bubble p { margin:0 0 6px; }
+.bubble p:last-child { margin:0; }
+
+.msg-meta {
+  font-size:.63rem; color:var(--muted); font-family:var(--mono);
+  margin-top:4px; padding:0 4px;
+  display:flex; gap:8px;
+}
+.msg.user .msg-meta { justify-content:flex-end; }
+.tok-badge { color:var(--accent); }
+
+/* typing */
+.typing-dots { display:flex; gap:5px; padding:5px 2px; align-items:center; }
+.typing-dots span {
+  width:7px; height:7px; border-radius:50%; background:var(--accent);
+  animation:tBounce 1.1s infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:.18s;opacity:.7}
+.typing-dots span:nth-child(3){animation-delay:.36s;opacity:.5}
+@keyframes tBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* empty state */
+.empty-state {
+  max-width:480px; margin:40px auto;
+  padding:0 24px; text-align:center;
+  animation:msgIn .4s ease forwards; opacity:0;
+}
+.empty-icon {
+  width:64px; height:64px; border-radius:18px;
+  background:var(--accent); color:#fff;
+  font-size:1.8rem;
+  display:flex; align-items:center; justify-content:center;
+  margin:0 auto 20px;
+  box-shadow:0 8px 24px rgba(37,99,235,.25);
+}
+.empty-state h2 { font-size:1.4rem; font-weight:800; color:var(--text); margin-bottom:8px; letter-spacing:-.02em; }
+.empty-state p  { font-size:.85rem; color:var(--muted2); line-height:1.7; margin-bottom:24px; }
+.suggestions { display:grid; grid-template-columns:1fr 1fr; gap:8px; text-align:left; }
+.sug {
+  background:var(--surface); border:1.5px solid var(--border);
+  border-radius:var(--r); padding:12px 14px;
+  cursor:pointer; transition:all .18s;
+}
+.sug:hover { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.08); transform:translateY(-1px); }
+.sug .si { font-size:1rem; display:block; margin-bottom:5px; }
+.sug .st { font-weight:600; font-size:.82rem; color:var(--text); display:block; }
+.sug .ss { font-size:.73rem; color:var(--muted); }
+
+/* limit banner */
+#limitBanner {
+  display:none; max-width:760px; margin:6px auto;
+  padding:0 24px;
+}
+.limit-box {
+  background:#fef2f2; border:1.5px solid #fecaca;
+  border-radius:var(--r); padding:11px 16px;
+  font-size:.8rem; color:var(--danger);
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--mono);
+}
+
+/* input area */
+.input-area {
+  padding:12px 24px 18px;
+  border-top:1px solid var(--border);
+  background:var(--surface); flex-shrink:0;
+}
+.input-wrap {
+  max-width:760px; margin:0 auto;
+  display:flex; align-items:flex-end; gap:8px;
+  background:var(--bg); border:1.5px solid var(--border2);
+  border-radius:14px; padding:9px 10px;
+  transition:border-color .2s, box-shadow .2s;
+}
+.input-wrap:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+#userInput {
+  flex:1; background:none; border:none; outline:none;
+  font-family:var(--font); font-size:.9rem; color:var(--text);
+  resize:none; max-height:140px; min-height:22px; padding:3px 4px;
+  line-height:1.5;
+}
+#userInput::placeholder { color:var(--muted); }
+.send-btn {
+  width:38px; height:38px; border-radius:10px; border:none;
+  background:var(--accent); color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; transition:.18s; flex-shrink:0;
+}
+.send-btn:hover { background:var(--accent-h); transform:scale(1.04); }
+.send-btn:disabled { opacity:.35; cursor:not-allowed; transform:none; }
+.clr-btn {
+  width:34px; height:34px; border-radius:8px;
+  border:1.5px solid var(--border); background:transparent;
+  color:var(--muted); cursor:pointer; font-size:13px;
+  display:flex; align-items:center; justify-content:center; transition:.15s;
+}
+.clr-btn:hover { border-color:var(--danger); color:var(--danger); }
+.input-footer {
+  max-width:760px; margin:7px auto 0;
+  display:flex; justify-content:space-between;
+}
+.hint { font-family:var(--mono); font-size:.6rem; color:var(--muted); }
+.byte-ct { font-family:var(--mono); font-size:.63rem; color:var(--muted2); }
+.byte-ct b { color:var(--accent); }
+
+/* err bubble */
+.err-bubble { background:#fef2f2!important; border-color:#fecaca!important; color:var(--danger)!important; }
+.err-bubble strong { color:var(--danger)!important; }
+
+/* toast */
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px);
+  background:var(--text); color:#fff; padding:10px 20px; border-radius:100px;
+  font-size:.82rem; font-weight:500; z-index:1000;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:none; white-space:nowrap;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* no-chat placeholder */
+.no-chat {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:12px; color:var(--muted);
+}
+.no-chat-icon { font-size:2.5rem; opacity:.3; }
+.no-chat p { font-size:.88rem; }
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══════════════════════════════════ -->
+<div id="authScreen" class="screen active">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">V</div>
+      <div>
+        <div class="auth-logo-text">VilloAI</div>
+        <div class="auth-logo-sub">byte-native · 1 byte = 1 token</div>
+      </div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Anmelden</button>
+      <button class="auth-tab" id="tabReg" onclick="switchTab('register')">Registrieren</button>
+    </div>
+
+    <div id="loginForm">
+      <div class="field">
+        <label>Benutzername</label>
+        <input id="loginUser" type="text" placeholder="dein_name" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>6-stellige PIN</label>
+        <div class="pin-row" id="loginPinRow">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+        </div>
+      </div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Anmelden</button>
+      <div class="auth-error" id="loginErr"></div>
+    </div>
+
+    <div id="registerForm" style="display:none">
+      <div class="field">
+        <label>Benutzername wählen</label>
+        <input id="regUser" type="text" placeholder="dein_name" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label>6-stellige PIN wählen</label>
+        <div class="pin-row" id="regPinRow">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+          <input class="pin-digit" type="password" inputmode="numeric" maxlength="1">
+        </div>
+      </div>
+      <button class="auth-btn" id="regBtn" onclick="doRegister()">Account erstellen</button>
+      <div class="auth-error" id="regErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ═══════════════════════════════════ -->
+<div id="appScreen" class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-brand">
+        <div class="brand-mark">V</div>
+        <div class="brand-name">VilloAI</div>
+      </div>
+
+      <div class="tok-gauge">
+        <div class="tok-row">
+          <span>Tokens: <b id="tokUsed">0</b> / 15 000</span>
+          <span id="resetIn">60:00</span>
+        </div>
+        <div class="gauge-track"><div class="gauge-bar" id="gaugeBar"></div></div>
+      </div>
+
+      <div class="user-strip" id="userStrip">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="userName">—</div>
+          <div class="user-role">VilloAI Nutzer</div>
+        </div>
+        <button class="logout-btn" onclick="doLogout()" title="Abmelden">↩</button>
+      </div>
+    </div>
+
+    <div class="chat-list-head">
+      <span>Chats</span>
+      <button class="new-chat-btn" onclick="newChat()" title="Neuer Chat">+</button>
+    </div>
+    <div class="chat-list" id="chatList"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="chat-head" id="chatHead">
+      <div>
+        <div class="chat-head-title" id="chatTitle">Chat wählen</div>
+        <div class="chat-head-sub" id="chatSub">Wähle einen Chat aus der Seitenleiste</div>
+      </div>
+      <div class="head-badge" id="headBadge">1 Byte = 1 Token</div>
+    </div>
+
+    <div id="msgArea">
+      <div class="no-chat" id="noChatPlaceholder">
+        <div class="no-chat-icon">💬</div>
+        <p>Wähle einen Chat oder erstelle einen neuen</p>
+      </div>
+    </div>
+
+    <div id="limitBanner">
+      <div class="limit-box">
+        ⛔ Stündliches Token-Limit erreicht (15 000). Reset um <b id="nextReset">—</b> Uhr — noch <b id="bannerTimer">--:--</b>.
+      </div>
+    </div>
+
+    <div class="input-area" id="inputArea" style="display:none">
+      <div class="input-wrap">
+        <textarea id="userInput" placeholder="Nachricht an VilloAI…" rows="1"></textarea>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="clr-btn" onclick="clearActiveChat()" title="Nachrichtenverlauf löschen">🗑</button>
+          <button class="send-btn" id="sendBtn" onclick="sendMsg()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="input-footer">
+        <span class="hint">↵ Senden · Shift+↵ Neue Zeile</span>
+        <span class="byte-ct">Bytes: <b id="byteCount">0</b></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ══ FIREBASE + APP LOGIC ═══════════════════════ -->
+<script type="module">
+import { initializeApp }        from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, push, onValue, remove, update }
+  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
+
+// ── Firebase init ──────────────────────────────────
+const app = initializeApp({
+  apiKey:            "AIzaSyCBIxBIkbu00XDxizmSoW96SPdlsIeEFXU",
+  authDomain:        "villoai.firebaseapp.com",
+  projectId:         "villoai",
+  storageBucket:     "villoai.firebasestorage.app",
+  messagingSenderId: "845865012915",
+  appId:             "1:845865012915:web:f36196931569c7c9dceac6",
+  databaseURL:       "https://villoai-default-rtdb.firebaseio.com"
+});
+const db = getDatabase(app);
+
+// ── Constants ──────────────────────────────────────
+const LIMIT   = 15000;
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+// ── State ──────────────────────────────────────────
+let currentUser   = null;   // { username, uid }
+let activeChatId  = null;
+let chatMessages  = [];     // local mirror of active chat
+let busy          = false;
+let chatListeners = {};     // unsubscribe fns
+
+// ── Byte tokenizer ─────────────────────────────────
+const enc = new TextEncoder();
+function tokOf(s) { return enc.encode(s).length; }
+
+// ── Hourly usage ───────────────────────────────────
+function getUsageKey(uid) { return `villo_usage_${uid}`; }
+function loadUsage(uid) {
+  try {
+    const raw = localStorage.getItem(getUsageKey(uid));
+    if (!raw) return initUsage();
+    const d = JSON.parse(raw);
+    if (!isCurrentHour(d.hour)) return initUsage();
+    return d;
+  } catch { return initUsage(); }
+}
+function initUsage() {
+  const now = new Date();
+  return { used: 0, hour: now.getHours(), day: now.toDateString() };
+}
+function isCurrentHour(h) {
+  const now = new Date();
+  return h === now.getHours();
+}
+function saveUsage(uid, u) { localStorage.setItem(getUsageKey(uid), JSON.stringify(u)); }
+function nextResetTime() {
+  const d = new Date(); d.setHours(d.getHours() + 1, 0, 0, 0);
+  return d;
+}
+function msToReset() { return nextResetTime() - Date.now(); }
+function fmtMs(ms) {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+}
+
+// ── UI helpers ─────────────────────────────────────
+function $(id)    { return document.getElementById(id); }
+function show(id) { $(id).style.display = ''; }
+function hide(id) { $(id).style.display = 'none'; }
+
+function toast(msg, dur = 2800) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+
+function getTime() { return new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}); }
+
+function updateGauge() {
+  if (!currentUser) return;
+  const u = loadUsage(currentUser.uid);
+  const pct = Math.min(u.used / LIMIT * 100, 100);
+  const bar = $('gaugeBar');
+  bar.style.width = pct + '%';
+  bar.className = 'gauge-bar' + (pct >= 100 ? ' danger' : pct >= 75 ? ' warn' : '');
+  $('tokUsed').textContent = u.used.toLocaleString('de-DE');
+  const limited = u.used >= LIMIT;
+  $('limitBanner').style.display = limited ? 'block' : 'none';
+  $('sendBtn').disabled = limited || busy;
+  if (limited) {
+    const nr = nextResetTime();
+    $('nextReset').textContent = nr.getHours().toString().padStart(2,'0') + ':00';
+  }
+}
+
+setInterval(() => {
+  // Auto-reset if new hour
+  if (currentUser) {
+    const u = loadUsage(currentUser.uid);
+    if (!isCurrentHour(u.hour)) {
+      saveUsage(currentUser.uid, initUsage());
+      updateGauge();
+    }
+  }
+  $('resetIn').textContent = fmtMs(msToReset());
+  $('bannerTimer').textContent = fmtMs(msToReset());
+}, 1000);
+
+// ── Markdown renderer ──────────────────────────────
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function md(t) {
+  t = t.replace(/```(\w+)?\n([\s\S]*?)```/g, (_,l,c) => `<pre><code>${esc(c.trim())}</code></pre>`);
+  t = t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t = t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  t = t.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  t = t.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  t = t.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+  t = t.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  t = t.replace(/^---$/gm,'<hr>');
+  t = t.replace(/^[*-] (.+)$/gm,'<li>$1</li>');
+  t = t.split('\n\n').map(p => p.startsWith('<') ? p : `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  return t;
+}
+
+// ── Message rendering ──────────────────────────────
+function renderMessages(msgs) {
+  const area = $('msgArea');
+  area.innerHTML = '';
+  if (!msgs || msgs.length === 0) {
+    area.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <h2>Was kann ich für dich tun?</h2>
+      <p>Starte das Gespräch — jeder Byte deiner Nachricht zählt als ein Token.</p>
+      <div class="suggestions">
+        <div class="sug" onclick="window._suggest('Erkläre mir Quantenverschränkung einfach')"><span class="si">⚛️</span><span class="st">Wissenschaft</span><span class="ss">Quantenverschränkung</span></div>
+        <div class="sug" onclick="window._suggest('Schreib eine Python-Klasse für einen Stack')"><span class="si">💻</span><span class="st">Code</span><span class="ss">Python Stack-Klasse</span></div>
+        <div class="sug" onclick="window._suggest('Was sind die Vor- und Nachteile von Microservices?')"><span class="si">🏗️</span><span class="st">Architektur</span><span class="ss">Microservices</span></div>
+        <div class="sug" onclick="window._suggest('Schreib eine kurze Kurzgeschichte über einen Astronauten')"><span class="si">🚀</span><span class="st">Kreativ</span><span class="ss">Astronauten-Story</span></div>
+      </div>
+    </div>`;
+    return;
+  }
+  msgs.forEach(m => appendBubble(m.role, m.content, m.tokens, m.time, false));
+}
+
+function appendBubble(role, content, tok, time, scroll = true) {
+  const area = $('msgArea');
+  // Remove empty-state
+  const es = area.querySelector('.empty-state, .no-chat');
+  if (es) es.remove();
+
+  const wrap = document.createElement('div'); wrap.className = 'msg-wrap';
+  const msg  = document.createElement('div'); msg.className = `msg ${role}`;
+  const av   = document.createElement('div'); av.className = `av ${role === 'user' ? 'usr-av' : 'ai-av'}`;
+  av.textContent = role === 'user' ? (currentUser?.username?.slice(0,3).toUpperCase() || 'USR') : 'VAI';
+  const bub  = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = md(content);
+  msg.appendChild(av); msg.appendChild(bub);
+  const meta = document.createElement('div'); meta.className = 'msg-meta';
+  meta.innerHTML = `<span>${time || getTime()}</span><span class="tok-badge">⬡ ${tok || 0} tok</span>`;
+  wrap.appendChild(msg); wrap.appendChild(meta);
+  area.appendChild(wrap);
+  if (scroll) area.scrollTop = area.scrollHeight;
+}
+
+function showTyping() {
+  const area = $('msgArea');
+  const wrap = document.createElement('div'); wrap.className = 'msg-wrap'; wrap.id = 'typing';
+  const msg  = document.createElement('div'); msg.className = 'msg ai';
+  const av   = document.createElement('div'); av.className = 'av ai-av'; av.textContent = 'VAI';
+  const bub  = document.createElement('div'); bub.className = 'bubble';
+  bub.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  msg.appendChild(av); msg.appendChild(bub);
+  wrap.appendChild(msg); area.appendChild(wrap);
+  area.scrollTop = area.scrollHeight;
+}
+function removeTyping() { const t = $('typing'); if (t) t.remove(); }
+
+// ── suggest helper (global for onclick) ───────────
+window._suggest = (t) => {
+  $('userInput').value = t;
+  $('userInput').dispatchEvent(new Event('input'));
+  $('userInput').focus();
+};
+
+// ── PIN helpers ────────────────────────────────────
+function getPinValue(rowId) {
+  return [...document.querySelectorAll(`#${rowId} .pin-digit`)].map(i => i.value).join('');
+}
+function clearPin(rowId) {
+  document.querySelectorAll(`#${rowId} .pin-digit`).forEach(i => i.value = '');
+}
+function setupPinRow(rowId) {
+  const digits = [...document.querySelectorAll(`#${rowId} .pin-digit`)];
+  digits.forEach((d, i) => {
+    d.addEventListener('input', () => {
+      if (d.value && i < digits.length - 1) digits[i+1].focus();
+    });
+    d.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !d.value && i > 0) digits[i-1].focus();
+    });
+  });
+}
+
+// ── Tab switching ──────────────────────────────────
+window.switchTab = (tab) => {
+  if (tab === 'login') {
+    show('loginForm'); hide('registerForm');
+    $('tabLogin').classList.add('active'); $('tabReg').classList.remove('active');
+  } else {
+    hide('loginForm'); show('registerForm');
+    $('tabReg').classList.add('active'); $('tabLogin').classList.remove('active');
+  }
+};
+
+// ── Sanitize username ──────────────────────────────
+function sanitizeUsername(u) { return u.trim().toLowerCase().replace(/[^a-z0-9_-]/g,''); }
+
+// ── Register ───────────────────────────────────────
+window.doRegister = async () => {
+  const rawUser = $('regUser').value.trim();
+  const username = sanitizeUsername(rawUser);
+  const pin = getPinValue('regPinRow');
+  const errEl = $('regErr');
+  errEl.style.display = 'none';
+
+  if (!username || username.length < 3) { errEl.textContent = 'Benutzername muss mind. 3 Zeichen haben (a-z, 0-9, _, -)'; errEl.style.display='block'; return; }
+  if (pin.length !== 6 || !/^\d{6}$/.test(pin)) { errEl.textContent = 'PIN muss genau 6 Ziffern haben'; errEl.style.display='block'; return; }
+
+  $('regBtn').disabled = true; $('regBtn').textContent = 'Erstelle…';
+  try {
+    const snap = await get(ref(db, `users/${username}`));
+    if (snap.exists()) { errEl.textContent = 'Benutzername bereits vergeben'; errEl.style.display='block'; return; }
+    await set(ref(db, `users/${username}`), { username, pin, createdAt: Date.now() });
+    toast('Account erstellt! Jetzt anmelden.');
+    switchTab('login'); $('loginUser').value = rawUser; clearPin('regPinRow');
+  } catch(e) { errEl.textContent = 'Fehler: ' + e.message; errEl.style.display='block'; }
+  finally { $('regBtn').disabled=false; $('regBtn').textContent='Account erstellen'; }
+};
+
+// ── Login ──────────────────────────────────────────
+window.doLogin = async () => {
+  const rawUser = $('loginUser').value.trim();
+  const username = sanitizeUsername(rawUser);
+  const pin = getPinValue('loginPinRow');
+  const errEl = $('loginErr');
+  errEl.style.display = 'none';
+
+  if (!username) { errEl.textContent='Benutzername eingeben'; errEl.style.display='block'; return; }
+  if (pin.length !== 6) { errEl.textContent='PIN vollständig eingeben'; errEl.style.display='block'; return; }
+
+  $('loginBtn').disabled=true; $('loginBtn').textContent='Prüfe…';
+  try {
+    const snap = await get(ref(db, `users/${username}`));
+    if (!snap.exists()) { errEl.textContent='Benutzer nicht gefunden'; errEl.style.display='block'; return; }
+    const data = snap.val();
+    if (data.pin !== pin) { errEl.textContent='Falsche PIN'; errEl.style.display='block'; clearPin('loginPinRow'); return; }
+    currentUser = { username, uid: username };
+    enterApp();
+  } catch(e) { errEl.textContent='Fehler: '+e.message; errEl.style.display='block'; }
+  finally { $('loginBtn').disabled=false; $('loginBtn').textContent='Anmelden'; }
+};
+
+// ── Enter App ──────────────────────────────────────
+function enterApp() {
+  $('authScreen').classList.remove('active');
+  $('appScreen').classList.add('active');
+  $('userName').textContent = currentUser.username;
+  $('userAvatar').textContent = currentUser.username.slice(0,2).toUpperCase();
+  loadChatList();
+  updateGauge();
+}
+
+// ── Logout ─────────────────────────────────────────
+window.doLogout = () => {
+  Object.values(chatListeners).forEach(fn => fn());
+  chatListeners = {};
+  currentUser = null; activeChatId = null; chatMessages = [];
+  $('chatList').innerHTML = '';
+  $('msgArea').innerHTML = '<div class="no-chat" id="noChatPlaceholder"><div class="no-chat-icon">💬</div><p>Wähle einen Chat oder erstelle einen neuen</p></div>';
+  hide('inputArea');
+  $('chatTitle').textContent = 'Chat wählen';
+  $('appScreen').classList.remove('active');
+  $('authScreen').classList.add('active');
+};
+
+// ── Chat list (realtime) ───────────────────────────
+function loadChatList() {
+  const chatsRef = ref(db, `chats/${currentUser.uid}`);
+  const unsub = onValue(chatsRef, snap => {
+    const data = snap.val() || {};
+    renderChatList(data);
+  });
+  chatListeners['chatList'] = unsub;
+}
+
+function renderChatList(data) {
+  const el = $('chatList');
+  el.innerHTML = '';
+  const entries = Object.entries(data).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
+  if (entries.length === 0) {
+    el.innerHTML = `<div style="padding:12px 10px;font-size:.78rem;color:var(--muted);text-align:center">Noch keine Chats.<br>Klicke + für einen neuen.</div>`;
+    return;
+  }
+  entries.forEach(([id, chat]) => {
+    const item = document.createElement('div');
+    item.className = 'chat-item' + (id === activeChatId ? ' active' : '');
+    item.innerHTML = `
+      <div class="chat-item-icon">💬</div>
+      <div class="chat-item-info">
+        <div class="chat-item-title">${escHtml(chat.title || 'Neuer Chat')}</div>
+        <div class="chat-item-sub">${escHtml(chat.lastMsg || 'Leer')}</div>
+      </div>
+      <button class="chat-del" onclick="deleteChat(event,'${id}')" title="Löschen">✕</button>`;
+    item.addEventListener('click', () => openChat(id, chat.title || 'Neuer Chat'));
+    el.appendChild(item);
+  });
+}
+
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── New chat ───────────────────────────────────────
+window.newChat = async () => {
+  const title = 'Chat ' + new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  const chatRef = push(ref(db, `chats/${currentUser.uid}`));
+  await set(chatRef, { title, createdAt: Date.now(), updatedAt: Date.now(), lastMsg: '' });
+  openChat(chatRef.key, title);
+};
+
+// ── Open chat ──────────────────────────────────────
+function openChat(id, title) {
+  activeChatId = id;
+  chatMessages = [];
+  $('chatTitle').textContent = title;
+  $('chatSub').textContent = 'VilloAI · 1 Byte = 1 Token';
+  show('inputArea');
+  $('noChatPlaceholder') && ($('noChatPlaceholder').style.display='none');
+
+  // Highlight in sidebar
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  [...document.querySelectorAll('.chat-item')].forEach(el => {
+    if (el.querySelector('.chat-item-title')?.textContent === title) el.classList.add('active');
+  });
+
+  // Listen to messages realtime
+  if (chatListeners['messages']) chatListeners['messages']();
+  const msgsRef = ref(db, `messages/${currentUser.uid}/${id}`);
+  chatListeners['messages'] = onValue(msgsRef, snap => {
+    const raw = snap.val() || {};
+    chatMessages = Object.entries(raw)
+      .sort((a,b) => (a[1].ts||0) - (b[1].ts||0))
+      .map(([,v]) => v);
+    renderMessages(chatMessages);
+    $('msgArea').scrollTop = $('msgArea').scrollHeight;
+  });
+  updateGauge();
+}
+
+// ── Delete chat ────────────────────────────────────
+window.deleteChat = async (e, id) => {
+  e.stopPropagation();
+  await remove(ref(db, `chats/${currentUser.uid}/${id}`));
+  await remove(ref(db, `messages/${currentUser.uid}/${id}`));
+  if (activeChatId === id) {
+    activeChatId = null; chatMessages = [];
+    $('msgArea').innerHTML = '<div class="no-chat"><div class="no-chat-icon">💬</div><p>Wähle einen Chat oder erstelle einen neuen</p></div>';
+    hide('inputArea');
+    $('chatTitle').textContent = 'Chat wählen';
+    $('chatSub').textContent = '';
+  }
+};
+
+// ── Clear messages ─────────────────────────────────
+window.clearActiveChat = async () => {
+  if (!activeChatId) return;
+  await remove(ref(db, `messages/${currentUser.uid}/${activeChatId}`));
+  await update(ref(db, `chats/${currentUser.uid}/${activeChatId}`), { lastMsg: '', updatedAt: Date.now() });
+  chatMessages = [];
+};
+
+// ── Send message ───────────────────────────────────
+window.sendMsg = async () => {
+  const text = $('userInput').value.trim();
+  if (!text || busy || !activeChatId) return;
+
+  const msgTok = tokOf(text);
+  const u = loadUsage(currentUser.uid);
+
+  if (u.used + msgTok > LIMIT) {
+    const errWrap = document.createElement('div'); errWrap.className = 'msg-wrap';
+    const em = document.createElement('div'); em.className = 'msg ai';
+    const av = document.createElement('div'); av.className = 'av ai-av'; av.textContent = 'VAI';
+    const bub = document.createElement('div'); bub.className = 'bubble err-bubble';
+    bub.innerHTML = `<strong>Token-Limit erreicht.</strong><br>Verbraucht: ${u.used.toLocaleString('de-DE')} / 15 000 Tokens. Reset um ${nextResetTime().getHours()}:00 Uhr.`;
+    em.appendChild(av); em.appendChild(bub); errWrap.appendChild(em);
+    $('msgArea').appendChild(errWrap);
+    $('msgArea').scrollTop = $('msgArea').scrollHeight;
+    return;
+  }
+
+  busy = true; $('sendBtn').disabled = true;
+  $('userInput').value = ''; $('userInput').style.height = 'auto';
+  $('byteCount').textContent = '0';
+
+  // Charge user tokens
+  u.used += msgTok; saveUsage(currentUser.uid, u); updateGauge();
+
+  // Save user message to Firebase
+  const ts = Date.now();
+  const userMsg = { role:'user', content:text, tokens:msgTok, time:getTime(), ts };
+  await push(ref(db, `messages/${currentUser.uid}/${activeChatId}`), userMsg);
+
+  // Update chat meta
+  const chatTitle = $('chatTitle').textContent;
+  let autoTitle = chatTitle;
+  if (chatTitle.startsWith('Chat ') && chatMessages.length === 0) {
+    autoTitle = text.slice(0, 40) + (text.length > 40 ? '…' : '');
+  }
+  await update(ref(db, `chats/${currentUser.uid}/${activeChatId}`), {
+    lastMsg: text.slice(0,60),
+    updatedAt: ts,
+    title: autoTitle
+  });
+  if (autoTitle !== chatTitle) $('chatTitle').textContent = autoTitle;
+
+  showTyping();
+
+  // Build history for API (last 20 messages to keep context reasonable)
+  const histForApi = chatMessages.slice(-20).map(m => ({ role:m.role, content:m.content }));
+  histForApi.push({ role:'user', content:text });
+
+  try {
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Du bist VilloAI, ein präziser und freundlicher KI-Assistent. Dein Token-System ist byte-nativ: Jeder UTF-8-Byte zählt als 1 Token. Der Nutzer hat ein Limit von 15 000 Tokens pro Stunde (Reset jeweils zur vollen Stunde). Antworte auf Deutsch, sofern nicht anders gewünscht. Nutze Markdown für Strukturierung und Code.`,
+        messages: histForApi
+      })
+    });
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) {
+      const aiMsg = { role:'ai', content:`**Fehler:** ${data.error.message}`, tokens:0, time:getTime(), ts:Date.now() };
+      await push(ref(db, `messages/${currentUser.uid}/${activeChatId}`), aiMsg);
+    } else {
+      const reply = data.content?.[0]?.text || 'Keine Antwort erhalten.';
+      const repTok = tokOf(reply);
+      const u2 = loadUsage(currentUser.uid);
+      u2.used += Math.min(repTok, LIMIT - u2.used);
+      saveUsage(currentUser.uid, u2); updateGauge();
+
+      const aiMsg = { role:'ai', content:reply, tokens:repTok, time:getTime(), ts:Date.now() };
+      await push(ref(db, `messages/${currentUser.uid}/${activeChatId}`), aiMsg);
+      await update(ref(db, `chats/${currentUser.uid}/${activeChatId}`), {
+        lastMsg: reply.slice(0,60), updatedAt: Date.now()
+      });
+    }
+  } catch(err) {
+    removeTyping();
+    const aiMsg = { role:'ai', content:`**Verbindungsfehler:** ${err.message}`, tokens:0, time:getTime(), ts:Date.now() };
+    await push(ref(db, `messages/${currentUser.uid}/${activeChatId}`), aiMsg);
+  }
+
+  busy = false;
+  $('sendBtn').disabled = loadUsage(currentUser.uid).used >= LIMIT;
+  $('userInput').focus();
+};
+
+// ── Input events ───────────────────────────────────
+const inp = $('userInput');
+inp.addEventListener('input', () => {
+  inp.style.height='auto';
+  inp.style.height = Math.min(inp.scrollHeight, 140) + 'px';
+  $('byteCount').textContent = tokOf(inp.value);
+});
+inp.addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+// ── Setup PIN rows ─────────────────────────────────
+setupPinRow('loginPinRow');
+setupPinRow('regPinRow');
+</script>
+</body>
+</html>
